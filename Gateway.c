@@ -32,6 +32,7 @@ static void func(int sig) {
     char log[BUFF_SIZE] = {"\0"};
     printf("\nend\n");
     sleep(3);
+    /* Ngắt kết nối với SQL, đóng FIFO, đóng file ghi log*/
     sprintf(log, "%s\tDisconect SQL\n", timestr);
     write(fifo_fd, log, strlen(log));
     sqlite3_finalize(stmt);
@@ -54,7 +55,7 @@ int main(int argc, char *argv[]) {
     }
     signal(SIGINT, func);
     child = fork();
-    if (child == 0) {
+    if (child == 0) { 
 //        create_fifo_if_not_exists();
         fifo_fd = open(FIFO_NAME, O_RDONLY);
         int i = 0;
