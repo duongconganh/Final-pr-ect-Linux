@@ -33,7 +33,7 @@ void *ConnectionManager(void *args) {
     if (server_fd == -1) handle_error("socket()");
 
     if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt))) handle_error("setsockopt()");
-
+    /* Triển khai bắt tay 3 bước trong TCP */
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_port = htons(port_no);
     serv_addr.sin_addr.s_addr = INADDR_ANY;
@@ -53,6 +53,7 @@ void *ConnectionManager(void *args) {
         client_port = ntohs(client_addr.sin_port);
 
         pthread_t threadread;
+        /* Tạo thread riêng với mỗi Sensor khác được kết nối.*/
         pthread_create(&threadread, NULL, &TranferData, (void *)new_socket_fd);
         pthread_detach(threadread);
     }
@@ -185,9 +186,11 @@ void *StorageManager(void *args) {
     int sqlconnect;
     int attempts = 0;
     while (attempts < MAX_RETRY) {
+         /* Mở SQL yêu cầu tồn tại sẵn file test.db .*/
         //  sqlconnect = sqlite3_open_v2("test.db", &db, SQLITE_OPEN_READWRITE, NULL);
+        /* sẽ tạo file db nêú file db yêu cầu chưa tồn tại */
         sqlconnect = sqlite3_open("save.db", &db);
-        //       sqlite3_open("test.db", &db);
+ 
         if (sqlconnect == 0) {
             printf("Connection to SQL server established..\n");
             time(&save);
@@ -203,6 +206,7 @@ void *StorageManager(void *args) {
             sleep(3);
         }
     }
+    /* Thông báo kết nối không thành công với 3 lần thử*/
     if (attempts == MAX_RETRY) {
         printf("Unable to connect to SQL server.\n");
         time(&save);
@@ -214,6 +218,7 @@ void *StorageManager(void *args) {
         write(fifo_fd, log, strlen(log));
         return NULL;
     }
+    /* Tạo bảng cho database */
     const char *sql =
         "CREATE TABLE IF NOT EXISTS SensorData ("
         "SensorID INTEGER, "
